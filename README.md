@@ -4,7 +4,7 @@
 
 ### Portable (Windows Only) (Recommended)
 
-[Download the latest release](https://github.com) for a *portable* version of the script with an embedded python installation and a driver shell script that you can drag and drop your desired input folders onto. This is meant to be fully standalone with no setup and no external dependencies required (the embedded python interpreter already comes with the needed dependencies installed).
+[Download the latest release](https://github.com/ZallocchiLab/DP-Processor/releases/latest) for a *portable* version of the script with an embedded python installation and a driver shell script that you can drag and drop your desired input folders onto. This is meant to be fully standalone with no setup and no external dependencies required (the embedded python interpreter already comes with the needed dependencies installed).
 
 ### Manual
 
