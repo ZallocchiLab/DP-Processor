@@ -3,8 +3,6 @@ from collections.abc import Iterable
 import numpy as np
 import pandas as pd
 
-VERSION = '1.1'
-
 def process_frame(df: pd.DataFrame, animal_name: str):
     # Group the rows based on their frequency value.
     grouped_dfs = df.groupby(df['f2(Hz)'])
@@ -45,8 +43,6 @@ def main():
     from pathlib import Path
     import os
     import sys
-
-    print(f'DP Processor {VERSION}')
 
     # Parse cmdline arguments
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
