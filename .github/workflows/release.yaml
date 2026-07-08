@@ -89,13 +89,13 @@ jobs:
           .\dist\python-${{ env.PYTHON_VERSION }}-embed-amd64\python.exe -m pip install -r requirements.txt --only-binary=:all:
 
       - name: Create Release Zip
-        run: Compress-Archive -Path "dist/*" -DestinationPath "dp-processor-portable-${{ env:PLATFORM }}_ID.zip"
+        run: Compress-Archive -Path "dist/*" -DestinationPath "dp-processor-portable-${{ env.PLATFORM }}_ID.zip"
 
       - name: Upload to Releases
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: dp-processor-portable-${{ env:PLATFORM_ID }}.zip
+          files: dp-processor-portable-${{ env.PLATFORM_ID }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -103,5 +103,5 @@ jobs:
         if: github.event_name != 'release'
         uses: actions/upload-artifact@v4
         with:
-          name: dp-processor-test-build-${{ env:PLATFORM_ID }}
-          path: dp-processor-portable-${{ env:PLATFORM_ID }}.zip
+          name: dp-processor-test-build-${{ env.PLATFORM_ID }}
+          path: dp-processor-portable-${{ env.PLATFORM_ID }}.zip
