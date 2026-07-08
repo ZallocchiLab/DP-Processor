@@ -50,19 +50,24 @@ jobs:
           setlocal enabledelayedexpansion
 
           set "PARENT_DIR=%~dp1"
-          set "OUTPUT_PATH=%PARENT_DIR%DP_Processed_Data\"
-
+          set "OUTPUT_PATH=%PARENT_DIR%DP_Processed_Data"
           set "APP_VERSION="
           if exist "%~dp0\version.txt" (
               set /p APP_VERSION=<"%~dp0\version.txt"
           )
 
-          echo "DP Processor %APP_VERSION%"
-          "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" --version
-          "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" "%~dp0\dp_processor.py" -v
+          set "CLEAN_INPUTS="
+          for %%I in (%*) do (
+              set "ITEM=%%~I"
+              if "!ITEM:~-1!"=="\" set "ITEM=!ITEM:~0,-1!"
+              set "CLEAN_INPUTS=!CLEAN_INPUTS! "!ITEM!""
+          )
 
-          echo Output destination: "%OUTPUT_PATH%"
-          "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" "%~dp0\dp_processor.py" -o "%OUTPUT_PATH%" -i "%*"
+          "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" --version
+
+          echo DP Processor !APP_VERSION!
+          echo Output destination: "!OUTPUT_PATH!"
+          "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" "%~dp0\dp_processor.py" -o "!OUTPUT_PATH!" -i !CLEAN_INPUTS!
 
           pause
           "@
