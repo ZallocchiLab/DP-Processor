@@ -3,9 +3,10 @@ name: Build Portable Release
 on:
     release:
         types: [published]
+    workflow_dispatch: # Allow manual trigger
 
 env:
-    PYTHON_VERSION: "3.13.2"
+    PYTHON_VERSION: "3.13.13"
     PYTHON_SHORT_VER: "313"
 
 jobs:
@@ -22,7 +23,14 @@ jobs:
               shell: powershell
               run: |
                 $rawTag = "${{ github.event.release.tag_name }}"
-                $cleanVersion = $rawTag -replace '^v', ''
+
+                # Fallback for if there is no release version
+                if ([string]::IsNullOrEmpty($rawTag)) {
+                    $cleanVersion = "0.0.0-test"
+                } else {
+                    $cleanVersion = $rawTag -replace '^v', ''
+                }
+
                 [System.IO.File]::WriteAllText("dist/version.txt", $cleanVersion, [System.Text.Encoding]::ASCII)
 
             - name: Generate Batch File Dynamically
@@ -62,7 +70,7 @@ jobs:
             - name: Install dependencies inside the embedded environment
               run: |
                   # Un-comment the 'import site' line in the ._pth file so pip packages work
-                  (Get-Content "dist/python-${{ env.PYTHON_VERSION }}embed-amd64/python${{ env.PYTHON_SHORT_VER }}._pth") -replace '#import site', 'import site' | Set-Content "dist/python-${{ env.PYTHON_VERSION }}-embed-amd64/python${{ env.PYTHON_SHORT_VER }}._pth"
+                  (Get-Content "dist/python-${{ env.PYTHON_VERSION }}-embed-amd64/python${{ env.PYTHON_SHORT_VER }}._pth") -replace '#import site', 'import site' | Set-Content "dist/python-${{ env.PYTHON_VERSION }}-embed-amd64/python${{ env.PYTHON_SHORT_VER }}._pth"
 
                   # Download and run get-pip
                   Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "get-pip.py"
@@ -74,9 +82,17 @@ jobs:
             - name: Create Release Zip
               run: Compress-Archive -Path "dist/*" -DestinationPath "dp-processor-portable.zip"
 
-            - name: Upload Asset
+            - name: Upload to Releases
+              if: github.event_name == 'release'
               uses: softprops/action-gh-release@v2
               with:
-                  files: dp-processor-portable.zip
+                files: dp-processor-portable.zip
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload Test Artifact
+              if: github.event_name != 'release'
+              uses: actions/upload-artifact@v4
+              with:
+                name: dp-processor-test-build
+                path: dp-processor-portable.zip
