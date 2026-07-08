@@ -4,6 +4,10 @@ on:
     release:
         types: [published]
 
+env:
+    PYTHON_VERSION: "3.13.2"
+    PYTHON_SHORT_VER: "313"
+
 jobs:
     build:
         runs-on: windows-latest
@@ -37,11 +41,11 @@ jobs:
                   )
 
                   echo "DP Processor %APP_VERSION%"
-                  "%~dp0\python-3.14.2-embed-amd64\python" --version
-                  "%~dp0\python-3.14.2-embed-amd64\python" "%~dp0\dp_processor.py" -v
+                  "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" --version
+                  "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" "%~dp0\dp_processor.py" -v
 
                   echo Output destination: "%OUTPUT_PATH%"
-                  "%~dp0\python-3.14.2-embed-amd64\python" "%~dp0\dp_processor.py" -o "%OUTPUT_PATH%" -i "%*"
+                  "%~dp0\python-${{ env.PYTHON_VERSION }}-embed-amd64\python" "%~dp0\dp_processor.py" -o "%OUTPUT_PATH%" -i "%*"
 
                   pause
                   "@
@@ -49,8 +53,8 @@ jobs:
 
             - name: Download Python Embeddable Zip
               run: |
-                  Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.14.2/python-3.14.2-embed-amd64.zip" -OutFile "python-embed.zip"
-                  Expand-Archive -Path "python-embed.zip" -DestinationPath "dist/python-3.14.2-embed-amd64"
+                  Invoke-WebRequest -Uri "https://www.python.org/ftp/python/${{ env.PYTHON_VERSION }}/python-${{ env.PYTHON_VERSION }}-embed-amd64.zip" -OutFile "python-embed.zip"
+                  Expand-Archive -Path "python-embed.zip" -DestinationPath "dist/python-${{ env.PYTHON_VERSION }}-embed-amd64"
 
             - name: Copy Python script into distribution folder
               run: Copy-Item "dp_processor.py" -Destination "dist/"
@@ -58,14 +62,14 @@ jobs:
             - name: Install dependencies inside the embedded environment
               run: |
                   # Un-comment the 'import site' line in the ._pth file so pip packages work
-                  (Get-Content "dist/python-3.14.2-embed-amd64/python314._pth") -replace '#import site', 'import site' | Set-Content "dist/python-3.14.2-embed-amd64/python314._pth"
+                  (Get-Content "dist/python-${{ env.PYTHON_VERSION }}embed-amd64/python${{ env.PYTHON_SHORT_VER }}._pth") -replace '#import site', 'import site' | Set-Content "dist/python-${{ env.PYTHON_VERSION }}-embed-amd64/python${{ env.PYTHON_SHORT_VER }}._pth"
 
                   # Download and run get-pip
                   Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "get-pip.py"
-                  .\dist\python-3.14.2-embed-amd64\python.exe get-pip.py
+                  .\dist\python-${{ env.PYTHON_VERSION }}-embed-amd64\python.exe get-pip.py
 
                   # Install your research requirements
-                  .\dist\python-3.14.2-embed-amd64\python.exe -m pip install -r requirements.txt
+                  .\dist\python-${{ env.PYTHON_VERSION }}-embed-amd64\python.exe -m pip install -r requirements.txt --only-binary=:all:
 
             - name: Create Release Zip
               run: Compress-Archive -Path "dist/*" -DestinationPath "dp-processor-portable.zip"
