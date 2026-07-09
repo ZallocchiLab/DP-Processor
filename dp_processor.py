@@ -49,47 +49,46 @@ def main():
     _ = parser.add_argument('-p', dest="pattern", type=str, default='DP-1.TSV', help='Pattern to match for input file selection')
     _ = parser.add_argument('-o', dest="output", type=Path, default='DP_Processed_Data', help='Name of the output directory')
     _ = parser.add_argument('-i', dest="inputs", nargs='+', type=Path, required=True, default='.', help='List of input directories containing files to process')
+
     args = parser.parse_args()
+    pattern: str = args.pattern
+    output: Path = args.output
+    inputs: Iterable[Path] = args.inputs
 
     # Construct output path
-    output_path = args.output.absolute()
-    output_name = f'result_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.csv'
-    output_file = os.path.join(output_path, output_name)
+    output_path = output.absolute()
     os.makedirs(output_path, exist_ok=True)
 
-    def create_dataframes():
-        def find_data_start_index(file_path: str):
+    def create_dataframes(search_path: Path):
+        def find_data_start_index(file_path: Path):
             with open(file_path, 'r') as file:
                 for i, line in enumerate(file):
                     if line.startswith(':DATA'):
                         return i
 
-        for path in args.inputs:
-            for file_path in Path(path).rglob(args.pattern):
-                file_path = str(file_path)
-                print(f'Processing \'{file_path}\'...')
+        for file_path in filter(Path.is_file, search_path.rglob(pattern)):
+            print(f'Processing \'{file_path}\'...')
 
-                # Find the animal name for this file
-                path = file_path.strip()
-                path = path[:path.rfind('\\')]
-                animal_name = path[path.rfind('\\') + 1:]
+            # Find start of the data
+            data_start = find_data_start_index(file_path)
+            if data_start is None:
+                print('Could not find data due to unexpected formatting, skipping...', file=sys.stderr)
+                continue
 
-                data_start = find_data_start_index(file_path)
+            # Read in the file as a dataframe, remove any rows that contain NA values
+            df = pd.read_csv(file_path, sep='\t', skiprows=data_start-1)
+            df.dropna(axis=0, how='any', inplace=True)
+            yield df, file_path.parent.name
 
-                if data_start is None:
-                    print('Could not find data due to unexpected formatting, skipping...', file=sys.stderr)
-                    continue
+    # Create an output for each input
+    for search_path in inputs:
+        output_df = process(create_dataframes(search_path))
+        output_name = f'{search_path.name}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.csv'
+        output_file = os.path.join(output_path, output_name)
 
-                # Read in the file as a dataframe, remove any rows that contain NA values
-                df = pd.read_csv(file_path, sep='\t', skiprows=data_start-1)
-                df.dropna(axis=0, how='any', inplace=True)
-                yield df, animal_name
-
-    output_df = process(create_dataframes())
-
-    with open(output_file, 'w') as f:
-        output_df.to_csv(f, lineterminator='\n')
-        print(f'Output written to \'{output_file}\'')
+        with open(output_file, 'w') as f:
+            output_df.to_csv(f, lineterminator='\n')
+            print(f'Output written to \'{output_file}\'')
 
 if __name__ == "__main__":
     main()
