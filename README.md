@@ -16,6 +16,6 @@ pip install -r requirements.txt
 ```
 Run the script with python (use `-h` flag to display help menu and usage)
 ```
-python dp_processor -h
+python dp_processor.py -h
 ```
 

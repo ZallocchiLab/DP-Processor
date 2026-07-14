@@ -28,7 +28,7 @@ def process_frame(df: pd.DataFrame, animal_name: str):
     output = pd.DataFrame(gen_data(), columns=["f(kHz)", "value", "animal"])
     return output.pivot(index="f(kHz)", columns="animal", values="value")
 
-def process(entries: Iterable[tuple[pd.DataFrame, str]]):
+def process_frames(entries: Iterable[tuple[pd.DataFrame, str]]):
     result_df = pd.DataFrame()
 
     for df, animal_name in entries:
@@ -67,7 +67,7 @@ def main():
                         return i
 
         for file_path in filter(Path.is_file, search_path.rglob(pattern)):
-            print(f'Processing \'{file_path}\'...')
+            print(f"Processing '{file_path}'...")
 
             # Find start of the data
             data_start = find_data_start_index(file_path)
@@ -82,7 +82,7 @@ def main():
 
     # Create an output for each input
     for search_path in inputs:
-        output_df = process(create_dataframes(search_path))
+        output_df = process_frames(create_dataframes(search_path))
         output_name = f'{search_path.name}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.csv'
         output_file = os.path.join(output_path, output_name)
 
